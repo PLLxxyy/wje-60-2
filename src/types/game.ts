@@ -30,6 +30,15 @@ export interface SortState {
   order: SortOrder;
 }
 
+export interface ImportResult {
+  success: boolean;
+  message: string;
+  importedCount: number;
+  skippedCount: number;
+  totalCount: number;
+  games?: Game[];
+}
+
 export interface GameStore {
   games: Game[];
   filters: FilterState;
@@ -47,6 +56,8 @@ export interface GameStore {
   setViewMode: (mode: ViewMode) => void;
   openModal: (game?: Game) => void;
   closeModal: () => void;
+  exportData: () => void;
+  importData: (file: File) => Promise<ImportResult>;
   
   filteredGames: Game[];
   stats: {

@@ -1,27 +1,7 @@
 import { create } from 'zustand';
-import type { Game, GameStore, GameStatus, SortField } from '../types/game';
-import { loadGames, saveGames, generateId } from '../utils/storage';
+import type { Game, GameStore, GameStatus, SortField, ImportResult, FilterState, SortState } from '../types/game';
+import { loadGames, saveGames, generateId, validateGame, exportGames, importGames } from '../utils/storage';
 import { mockGames } from '../utils/mockData';
-
-const validateGame = (game: any): game is Game => {
-  return (
-    game &&
-    typeof game.id === 'string' &&
-    typeof game.name === 'string' &&
-    typeof game.platform === 'string' &&
-    typeof game.releaseYear === 'number' &&
-    !isNaN(game.releaseYear) &&
-    game.releaseYear >= 1970 &&
-    game.releaseYear <= 2030 &&
-    typeof game.publisher === 'string' &&
-    typeof game.genre === 'string' &&
-    typeof game.coverImage === 'string' &&
-    ['none', 'playing', 'completed', 'wishlist'].includes(game.status) &&
-    typeof game.romFileName === 'string' &&
-    typeof game.createdAt === 'number' &&
-    typeof game.updatedAt === 'number'
-  );
-};
 
 const initialGames = (() => {
   const saved = loadGames();
@@ -177,6 +157,21 @@ export const useGameStore = create<GameStore>((set, get) => ({
       isModalOpen: false,
       selectedGame: null,
     });
+  },
+
+  exportData: () => {
+    exportGames(get().games);
+  },
+
+  importData: async (file: File): Promise<ImportResult> => {
+    const result = await importGames(file, get().games);
+    if (result.success && result.games && result.games.length > 0) {
+      const games = [...get().games, ...result.games];
+      const filteredGames = computeFilteredGames(games, get().filters, get().sort);
+      set({ games, filteredGames });
+      saveGames(games);
+    }
+    return result;
   },
 
   get filteredGames() {

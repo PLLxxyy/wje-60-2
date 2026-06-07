@@ -1,15 +1,52 @@
-import { Search, Plus, LayoutGrid, List, Clock } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { Search, Plus, LayoutGrid, List, Clock, Download, Upload } from 'lucide-react';
 import { useGameStore } from '@/store/useGameStore';
 import { VIEW_MODES } from '@/utils/constants';
-import type { ViewMode } from '@/types/game';
+import type { ViewMode, ImportResult } from '@/types/game';
 
 export default function Header() {
-  const { viewMode, setViewMode, setFilters, openModal, filters } = useGameStore();
+  const { viewMode, setViewMode, setFilters, openModal, filters, exportData, importData } = useGameStore();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   const viewIcons: Record<ViewMode, typeof LayoutGrid> = {
     grid: LayoutGrid,
     list: List,
     timeline: Clock,
+  };
+
+  const showToast = (message: string, type: 'success' | 'error') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  const handleExport = () => {
+    try {
+      exportData();
+      showToast('数据导出成功！', 'success');
+    } catch (error) {
+      showToast('导出失败，请重试', 'error');
+    }
+  };
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const result: ImportResult = await importData(file);
+    if (result.success) {
+      showToast(result.message, 'success');
+    } else {
+      showToast(result.message, 'error');
+    }
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   return (
@@ -59,6 +96,32 @@ export default function Header() {
             </div>
 
             <button
+              onClick={handleExport}
+              className="btn-retro btn-retro-blue flex items-center gap-2"
+              title="导出数据"
+            >
+              <Download className="w-4 h-4" />
+              <span className="hidden sm:inline">导出</span>
+            </button>
+
+            <button
+              onClick={handleImportClick}
+              className="btn-retro btn-retro-green flex items-center gap-2"
+              title="导入数据"
+            >
+              <Upload className="w-4 h-4" />
+              <span className="hidden sm:inline">导入</span>
+            </button>
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".json"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+
+            <button
               onClick={() => openModal()}
               className="btn-retro btn-retro-yellow flex items-center gap-2"
             >
@@ -67,6 +130,18 @@ export default function Header() {
             </button>
           </div>
         </div>
+
+        {toast && (
+          <div
+            className={`fixed top-20 right-4 px-4 py-3 rounded border-2 font-retro text-sm z-50 shadow-lg ${
+              toast.type === 'success'
+                ? 'bg-bg-card border-neon-green text-neon-green'
+                : 'bg-bg-card border-neon-pink text-neon-pink'
+            }`}
+          >
+            {toast.message}
+          </div>
+        )}
       </div>
     </header>
   );

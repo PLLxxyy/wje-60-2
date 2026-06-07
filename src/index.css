@@ -107,6 +107,16 @@ body::after {
     @apply hover:bg-neon-yellow hover:text-bg-darker hover:shadow-neon-yellow;
   }
 
+  .btn-retro-blue {
+    @apply border-neon-blue text-neon-blue;
+    @apply hover:bg-neon-blue hover:text-bg-darker hover:shadow-neon-blue;
+  }
+
+  .btn-retro-green {
+    @apply border-neon-green text-neon-green;
+    @apply hover:bg-neon-green hover:text-bg-darker hover:shadow-neon-green;
+  }
+
   .input-retro {
     @apply w-full px-3 py-2 bg-bg-darker border-2 border-neon-blue/50 text-white;
     @apply font-retro text-lg;
